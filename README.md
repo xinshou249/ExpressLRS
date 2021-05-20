@@ -44,7 +44,7 @@ After taking a look at the [supported Hardware](https://github.com/ExpressLRS/Ex
 
 ### 900 MHz Hardware:
 
-<img src="/https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/900Mhardware.jpg" width = "80%">
+<img src="https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/900Mhardware.jpg" width = "80%">
 
 - **TX**
     - [FrSky R9M (2018)](https://www.frsky-rc.com/product/r9m/) (Full Support, requires resistor mod)
@@ -67,7 +67,7 @@ After taking a look at the [supported Hardware](https://github.com/ExpressLRS/Ex
 
 ### 2.4 GHz Hardware:
 
-<img src="/https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/24Ghardware.jpg" width = "80%">
+<img src="https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/24Ghardware.jpg" width = "80%">
 
 - **TX**
     - [DIY JR Bay](https://github.com/AlessandroAU/ExpressLRS/tree/master/PCB/2400MHz/TX_SX1280) (Full Support, 27dBm, supports WiFi Updates)
