@@ -31,6 +31,12 @@
 #define GPIO_PIN_RCSIGNAL_RX 13
 #define GPIO_PIN_RCSIGNAL_TX 13
 #define GPIO_PIN_LED 2
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
+
 
 #elif defined(TARGET_TTGO_LORA_V1_AS_RX)
 
@@ -45,6 +51,11 @@
 #define GPIO_PIN_OLED_SCK 22
 #define GPIO_PIN_RCSIGNAL_RX 13
 #define GPIO_PIN_RCSIGNAL_TX 13
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
 
 #elif defined(TARGET_TTGO_LORA_V2_AS_RX)
  // not supported
@@ -62,10 +73,20 @@
 #define GPIO_PIN_RCSIGNAL_RX 2
 #define GPIO_PIN_RCSIGNAL_TX 2 // so we don't have to solder the extra resistor, we switch rx/tx using gpio mux
 #define GPIO_PIN_LED 27
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
 
 #elif defined(TARGET_EXPRESSLRS_PCB_TX_V3_LEGACY)
 #define GPIO_PIN_BUTTON 36
 #define RC_SIGNAL_PULLDOWN 4
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
 
 #elif defined(TARGET_EXPRESSLRS_PCB_RX_V3)
 #define GPIO_PIN_NSS 15
@@ -85,6 +106,11 @@
 #define GPIO_PIN_LED 16
 #define GPIO_PIN_BUTTON 0
 #define timerOffset -1
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
 
 #elif defined(TARGET_R9M_RX)
 /*
@@ -148,6 +174,11 @@ https://github.com/jaxxzer
     #define GPIO_PIN_BUTTON         PC13 // pullup e.g. LOW when pressed
 #endif
 #define timerOffset             1
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
 
 // External pads
 // #define R9m_Ch1    PA8
@@ -203,6 +234,9 @@ https://github.com/jaxxzer
 #define DAC_I2C_ADDRESS         0b0001100
 #define DAC_IN_USE              1
 
+#define MaxPower              PWR_250mW
+#define DefaultPowerEnum PWR_50mW
+
 #elif defined(TARGET_R9M_LITE_TX)
 
 #define GPIO_PIN_RFswitch_CONTROL     PC13  // need to confirm  //HIGH = RX, LOW = TX
@@ -226,6 +260,12 @@ https://github.com/jaxxzer
 
 #define GPIO_PIN_BUFFER_OE      PA5  //CONFIRMED
 #define GPIO_PIN_BUFFER_OE_INVERTED 0
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
+
 
 #elif defined(TARGET_R9M_LITE_PRO_TX)
 #define GPIO_PIN_RFamp_APC1           PA4  //2.7V
@@ -255,6 +295,16 @@ https://github.com/jaxxzer
 #define GPIO_PIN_VRF1			        PA7  // 26SU Switch RF1
 #define GPIO_PIN_VRF2			        PB1  // 26SU Switch RF2
 #define GPIO_PIN_SWR			         PA0  // SWR ADC1_IN1
+#define MaxPower PWR_1000mW
+#define DefaultPowerEnum PWR_100mW
+#define POWER_100mw_Voltage1        3350
+#define POWER_100mw_Voltage2        732
+#define POWER_250mw_Voltage1        3350
+#define POWER_250mw_Voltage2        1080
+#define POWER_500mw_Voltage1        3350
+#define POWER_500mw_Voltage2        1356
+#define POWER_1000mw_Voltage1       3350
+#define POWER_1000mw_Voltage2       1853
 
 #elif defined(TARGET_RX_ESP8266_SX1280_V1)
 #define GPIO_PIN_NSS 15
@@ -278,37 +328,52 @@ High = Ant2
 */
     #define GPIO_PIN_ANTENNA_SELECT 0
 #else
-    #define GPIO_PIN_BUTTON 0
+    #define GPIO_PIN_BUTTON  0
 #endif
+#define MaxPower             PWR_25mW
+#define DefaultPowerEnum     PWR_25mW
+#define POWER_10mw_VALUE     8
+#define POWER_25mw_VALUE     13
+#define POWER_50mw_VALUE     15 // Someone needs to verify max power
+
 
 #elif defined(TARGET_TX_ESP32_SX1280_V1)
-#define GPIO_PIN_NSS 5
-#define GPIO_PIN_BUSY 21
-#define GPIO_PIN_DIO1 4
-#define GPIO_PIN_MOSI 23
-#define GPIO_PIN_MISO 19
-#define GPIO_PIN_SCK 18
-#define GPIO_PIN_RST 14
-#define GPIO_PIN_RCSIGNAL_RX 13
-#define GPIO_PIN_RCSIGNAL_TX 13
+#define GPIO_PIN_NSS          5
+#define GPIO_PIN_BUSY         21
+#define GPIO_PIN_DIO1         4
+#define GPIO_PIN_MOSI         23
+#define GPIO_PIN_MISO         19
+#define GPIO_PIN_SCK          18
+#define GPIO_PIN_RST          14
+#define GPIO_PIN_RCSIGNAL_RX  13
+#define GPIO_PIN_RCSIGNAL_TX  13
+#define MaxPower              PWR_10mW // Output is actually 14mW
+#define DefaultPowerEnum      PWR_10mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      13
 
 #elif defined(TARGET_RX_GHOST_ATTO_V1)
-#define GPIO_PIN_NSS            PA15
-#define GPIO_PIN_BUSY           PA3
-#define GPIO_PIN_DIO1           PA1
-#define GPIO_PIN_MOSI           PB5
-#define GPIO_PIN_MISO           PB4
-#define GPIO_PIN_SCK            PB3
-#define GPIO_PIN_RST            PB0
+#define GPIO_PIN_NSS             PA15
+#define GPIO_PIN_BUSY            PA3
+#define GPIO_PIN_DIO1            PA1
+#define GPIO_PIN_MOSI            PB5
+#define GPIO_PIN_MISO            PB4
+#define GPIO_PIN_SCK             PB3
+#define GPIO_PIN_RST             PB0
 //#define GPIO_PIN_RCSIGNAL_RX    PB7
 //#define GPIO_PIN_RCSIGNAL_TX    PB6
-#define GPIO_PIN_RCSIGNAL_RX    PB6 // USART1, half duplex
-#define GPIO_PIN_RCSIGNAL_TX    PA2 // USART2, half duplex
+#define GPIO_PIN_RCSIGNAL_RX     PB6 // USART1, half duplex
+#define GPIO_PIN_RCSIGNAL_TX     PA2 // USART2, half duplex
 //#define GPIO_PIN_LED            PA7
 #define GPIO_PIN_LED_WS2812      PA7
 #define GPIO_PIN_LED_WS2812_FAST PA_7
 //#define GPIO_PIN_BUTTON         PA12
-#define timerOffset             1
+#define timerOffset              1
+#define MaxPower                 PWR_50mW
+#define DefaultPowerEnum         PWR_50mW
+#define POWER_10mw_VALUE         8
+#define POWER_25mw_VALUE         12
+#define POWER_50mw_VALUE         15
 
 #elif defined(TARGET_TX_GHOST) // GHOST TX FULL AND LITE
 #define GPIO_PIN_NSS                PA15
@@ -330,6 +395,13 @@ High = Ant2
 #define GPIO_PIN_RF_AMP_DET         PA3  // Voltage detector pin 
 #define GPIO_PIN_BUZZER             PC13
 #define timerOffset                 1
+#define MaxPower PWR_250mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE      -16
+#define POWER_25mw_VALUE      -14
+#define POWER_50mw_VALUE      -11
+#define POWER_100mw_VALUE     -8
+#define POWER_250mw_VALUE     -4
 
 #elif defined(TARGET_TX_ESP32_E28_SX1280_V1) || defined(TARGET_TX_ESP32_LORA1280F27)
 #define GPIO_PIN_NSS 5
@@ -345,6 +417,29 @@ High = Ant2
 #define GPIO_PIN_OLED_SCK -1
 #define GPIO_PIN_RCSIGNAL_RX 13
 #define GPIO_PIN_RCSIGNAL_TX 13
+#define MaxPower PWR_250mW
+#define DefaultPowerEnum PWR_50mW
+#define MaxPower PWR_250mW
+#define DefaultPowerEnum PWR_50mW
+#ifdef TARGET_TX_ESP32_LORA1280F27 
+    #define POWER_10mw_VALUE      -4
+    #define POWER_25mw_VALUE      0
+    #define POWER_50mw_VALUE      3
+    #define POWER_100mw_VALUE     6
+    #define POWER_250mw_VALUE     12
+#elif TARGET_HappyModel_ES24TX_2400_TX
+    #define POWER_10mw_VALUE      -17
+    #define POWER_25mw_VALUE      -13
+    #define POWER_50mw_VALUE      -9
+    #define POWER_100mw_VALUE     -6
+    #define POWER_250mw_VALUE     -2
+#else // TARGET_TX_ESP32_E28_SX1280_V1
+    #define POWER_10mw_VALUE      -15
+    #define POWER_25mw_VALUE      -11
+    #define POWER_50mw_VALUE      -8
+    #define POWER_100mw_VALUE     -5
+    #define POWER_250mw_VALUE     -1
+#endif
 
 #elif defined(TARGET_SX1280_RX_CCG_NANO_v05)
 #define GPIO_PIN_NSS         PA4
@@ -359,9 +454,14 @@ High = Ant2
 #define GPIO_PIN_RCSIGNAL_RX PB7  // USART1, AFAIO
 #define GPIO_PIN_RCSIGNAL_TX PB6  // USART1, AFAIO
 
-#define GPIO_PIN_LED_RED     PB5
+#define GPIO_PIN_LED_RED      PB5
 
-#define timerOffset          1
+#define timerOffset           1
+#define MaxPower              PWR_50mW
+#define DefaultPowerEnum      PWR_50mW
+#define POWER_10mw_VALUE      8
+#define POWER_25mw_VALUE      12
+#define POWER_50mw_VALUE      15
 
 #elif defined(TARGET_NAMIMNORC_TX)
 /*
@@ -412,6 +512,14 @@ Designed by NamimnoRC
 /* WS2812 led */
 #define GPIO_PIN_LED_WS2812      PB0
 #define GPIO_PIN_LED_WS2812_FAST PB_0
+#define POWER_10mw_VALUE         -18
+#define POWER_25mw_VALUE         -18
+#define POWER_50mw_VALUE         -15
+#define POWER_100mw_VALUE        -12
+#define POWER_250mw_VALUE        -8
+#define POWER_500mw_VALUE        -5
+#define POWER_1000mw_VALUE       3
+
 
 #elif defined(TARGET_NAMIMNORC_RX)
 /*
@@ -444,6 +552,11 @@ Designed by NamimnoRC
 #define GPIO_PIN_RCSIGNAL_TX    PA9
 
 #define timerOffset             1
+#define MaxPower                PWR_50mW
+#define DefaultPowerEnum        PWR_50mW
+#define POWER_10mw_VALUE        8
+#define POWER_25mw_VALUE        12
+#define POWER_50mw_VALUE        15
 
 #elif defined(TARGET_NATIVE)
 #define IRAM_ATTR
@@ -480,28 +593,42 @@ Designed by NamimnoRC
 #define GPIO_PIN_UART3RX_INVERT PB5 // Standalone inverter
 #define GPIO_PIN_BLUETOOTH_EN   PA8 // Bluetooth power on (active low)
 #define GPIO_PIN_UART1RX_INVERT PB6 // XOR chip
+#define MaxPower PWR_100mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE       -15
+#define POWER_25mw_VALUE       -11
+#define POWER_50mw_VALUE        -7
+#define POWER_100mw_VALUE       -1
+#define POWER_250mw_VALUE        6
 
 #elif defined(TARGET_RX_FM30_MINI)
-#define GPIO_PIN_NSS            PA15 // or PB3?
-#define GPIO_PIN_BUSY           PE9
-#define GPIO_PIN_DIO1           PE8
-#define GPIO_PIN_MOSI           PB5
-#define GPIO_PIN_MISO           PB4
-#define GPIO_PIN_SCK            PB3
-#define GPIO_PIN_RST            PB2
-#define GPIO_PIN_TX_ENABLE      PD8 // CTX on SE2431L
-#define GPIO_PIN_ANTENNA_SELECT PA8 // Low for left, high for right
-#define GPIO_PIN_RCSIGNAL_RX    PA3 // UART2
-#define GPIO_PIN_RCSIGNAL_TX    PA2 // UART2 NOTE: Not the "OUT" pinheader pad
-#define GPIO_PIN_LED_RED        PB6
-#define GPIO_PIN_LED_GREEN      PB7
-#define GPIO_PIN_DEBUG_RX       PA10 // UART1
-#define GPIO_PIN_DEBUG_TX       PA9  // UART1
-#define timerOffset             0
-#define GPIO_LED_RED_INVERTED   1
-#define GPIO_LED_GREEN_INVERTED 1
+#define GPIO_PIN_NSS             PA15 // or PB3?
+#define GPIO_PIN_BUSY            PE9
+#define GPIO_PIN_DIO1            PE8
+#define GPIO_PIN_MOSI            PB5
+#define GPIO_PIN_MISO            PB4
+#define GPIO_PIN_SCK             PB3
+#define GPIO_PIN_RST             PB2
+#define GPIO_PIN_TX_ENABLE       PD8 // CTX on SE2431L
+#define GPIO_PIN_ANTENNA_SELECT  PA8 // Low for left, high for right
+#define GPIO_PIN_RCSIGNAL_RX     PA3 // UART2
+#define GPIO_PIN_RCSIGNAL_TX     PA2 // UART2 NOTE: Not the "OUT" pinheader pad
+#define GPIO_PIN_LED_RED         PB6
+#define GPIO_PIN_LED_GREEN       PB7
+#define GPIO_PIN_DEBUG_RX        PA10 // UART1
+#define GPIO_PIN_DEBUG_TX        PA9  // UART1
+#define timerOffset              0
+#define GPIO_LED_RED_INVERTED    1
+#define GPIO_LED_GREEN_INVERTED  1
 // Unused pins
-#define GPIO_PIN_UART1TX_INVERT PF6
+#define GPIO_PIN_UART1TX_INVERT  PF6
+#define MaxPower PWR_100mW
+#define DefaultPowerEnum PWR_50mW
+#define POWER_10mw_VALUE       -15
+#define POWER_25mw_VALUE       -11
+#define POWER_50mw_VALUE        -7
+#define POWER_100mw_VALUE       -1
+#define POWER_250mw_VALUE        6
 
 #else
 #error "Unknown target!"

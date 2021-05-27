@@ -10,42 +10,18 @@
 #include "SX1280Driver.h"
 #endif
 
-#if defined(TARGET_1000mW_MODULE) || \
-    defined(TARGET_R9M_TX)        || \
-    defined(TARGET_TX_ES915TX)
-#ifdef UNLOCK_HIGHER_POWER
-#define MaxPower PWR_1000mW
-#else
-#define MaxPower PWR_250mW
-#endif
-#define DefaultPowerEnum PWR_50mW
-
-#elif defined(TARGET_R9M_LITE_PRO_TX)
-#define MaxPower PWR_1000mW
-#define DefaultPowerEnum PWR_100mW
-
-#elif defined(TARGET_TX_ESP32_E28_SX1280_V1) || \
-      defined(TARGET_TX_ESP32_LORA1280F27)   || \
-      defined(TARGET_TX_GHOST)
-#define MaxPower PWR_250mW
-#define DefaultPowerEnum PWR_50mW
-
-#elif defined(TARGET_TX_ESP32_SX1280_V1)
-#define MaxPower PWR_10mW // Output is actually 14mW
-#define DefaultPowerEnum PWR_10mW
-
-#elif defined(TARGET_TX_FM30) || defined(TARGET_RX_FM30_MINI)
-#define MaxPower PWR_100mW
-#define DefaultPowerEnum PWR_50mW
+#if defined(TARGET_1000mW_MODULE) 
+    #define MaxPower PWR_1000mW
 
 #else
 // Default is "100mW module"
 //  ==> average ouput is 50mW with high duty cycle
-#define MaxPower PWR_50mW
-#define DefaultPowerEnum PWR_50mW
-#ifndef TARGET_100mW_MODULE
-#define TARGET_100mW_MODULE 1
-#endif
+    #ifndef MaxPower // Safety incase that is not defined
+        #define MaxPower PWR_50mW
+    #endif
+    #ifndef DefaultPowerEnum // Safety incase that is not defined
+        #define DefaultPowerEnum PWR_50mW
+    #endif
 #endif
 
 #if !defined(MaxPower) && defined(TARGET_RX)
