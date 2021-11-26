@@ -51,6 +51,18 @@
 #define MaxPower PWR_100mW
 #define DefaultPowerEnum PWR_50mW
 
+#elif defined(TARGET_EMAX_900TX)
+#ifdef UNLOCK_HIGHER_POWER
+#define MaxPower PWR_2000mW
+#else
+#define MaxPower PWR_250mW
+#endif
+#define DefaultPowerEnum PWR_50mW
+
+#elif defined(TARGET_TX_EMAX_2400_V1)
+#define MaxPower PWR_1000mW
+#define DefaultPowerEnum PWR_50mW
+
 #else
 // Default is "100mW module"
 //  ==> average ouput is 50mW with high duty cycle

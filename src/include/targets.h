@@ -590,6 +590,82 @@ Designed by NamimnoRC
 #define GPIO_PIN_LED            16
 #define GPIO_PIN_BUTTON         0
 
+#elif defined(TARGET_EMAX_900TX) 
+#define GPIO_PIN_NSS            5
+#define GPIO_PIN_DIO0           26
+#define GPIO_PIN_DIO1           25
+#define GPIO_PIN_MOSI           23
+#define GPIO_PIN_MISO           19
+#define GPIO_PIN_SCK            18
+#define GPIO_PIN_RST            14
+#define GPIO_PIN_RX_ENABLE      13
+#define GPIO_PIN_TX_ENABLE      12
+#define GPIO_PIN_RCSIGNAL_RX    2
+#define GPIO_PIN_RCSIGNAL_TX    2 // so we don't have to solder the extra resistor, we switch rx/tx using gpio mux
+#define GPIO_PIN_LED            27
+#define GPIO_PIN_FAN_EN         17
+#define GPIO_PIN_RFamp_APC2     25
+#define GPIO_PIN_OLED_SDA       4
+#define GPIO_PIN_OLED_SCK       16
+#define GPIO_PIN_OLED_RST       U8X8_PIN_NONE
+#define GPIO_PIN_KEY_UP         33
+#define GPIO_PIN_KEY_DOWN       32
+#define GPIO_PIN_KEY_LEFT       34
+#define GPIO_PIN_KEY_RIGHT      21
+#define GPIO_PIN_KEY_ENTER      35
+
+#elif defined(TARGET_RX_EMAX_900_V1)
+#define GPIO_PIN_NSS            15
+#define GPIO_PIN_DIO0           4
+#define GPIO_PIN_DIO1           5
+#define GPIO_PIN_MOSI           13
+#define GPIO_PIN_MISO           12
+#define GPIO_PIN_SCK            14
+#define GPIO_PIN_RST            2
+#define GPIO_PIN_LED            16
+#define GPIO_PIN_BUTTON         0
+
+#elif defined(TARGET_TX_EMAX_2400_V1)
+#define GPIO_PIN_NSS            5
+#define GPIO_PIN_BUSY           21
+#define GPIO_PIN_DIO0           -1
+#define GPIO_PIN_DIO1           4
+#define GPIO_PIN_MOSI           23
+#define GPIO_PIN_MISO           19
+#define GPIO_PIN_SCK            18
+#define GPIO_PIN_RST            14
+#define GPIO_PIN_RX_ENABLE      27
+#define GPIO_PIN_TX_ENABLE      26
+#define GPIO_PIN_RCSIGNAL_RX    13
+#define GPIO_PIN_RCSIGNAL_TX    13
+#define GPIO_PIN_LED_BLUE       17
+#define GPIO_PIN_LED_GREEN      16
+//#define GPIO_PIN_BUTTON         25
+#define GPIO_PIN_FAN_EN         22
+#define GPIO_PIN_OLED_SDA       12
+#define GPIO_PIN_OLED_SCK       15
+#define GPIO_PIN_OLED_RST       U8X8_PIN_NONE
+#define GPIO_PIN_KEY_UP         33
+#define GPIO_PIN_KEY_DOWN       32
+#define GPIO_PIN_KEY_LEFT       34
+#define GPIO_PIN_KEY_RIGHT      25
+#define GPIO_PIN_KEY_ENTER      35
+
+#elif defined(TARGET_RX_EMAX_2400_V1)
+#define GPIO_PIN_NSS            15
+#define GPIO_PIN_BUSY           5
+#define GPIO_PIN_DIO0           -1
+#define GPIO_PIN_DIO1           4
+#define GPIO_PIN_MOSI           13
+#define GPIO_PIN_MISO           12
+#define GPIO_PIN_SCK            14
+#define GPIO_PIN_RST            2
+#define GPIO_PIN_LED            16
+#define GPIO_PIN_BUTTON         0
+#define timerOffset             -1
+#define GPIO_PIN_RX_ENABLE      9 //enable pa
+#define GPIO_PIN_TX_ENABLE      10
+
 #else
 #error "Unknown target!"
 #endif

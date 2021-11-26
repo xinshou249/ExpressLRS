@@ -392,6 +392,38 @@ PowerLevels_e POWERMGNT::setPower(PowerLevels_e Power)
         Power = PWR_50mW;
         break;
     }
+#elif defined(TARGET_EMAX_900TX)
+    Radio.SetOutputPower(0b0000);
+
+    switch (Power)
+    {
+    case PWR_10mW:
+        dacWrite(GPIO_PIN_RFamp_APC2, 1);
+        break;
+    case PWR_25mW:
+        dacWrite(GPIO_PIN_RFamp_APC2, 10);
+        break;
+    case PWR_100mW:
+        dacWrite(GPIO_PIN_RFamp_APC2, 35);
+        break;
+    case PWR_250mW:
+    dacWrite(GPIO_PIN_RFamp_APC2, 55);
+        break;
+    case PWR_500mW:
+        dacWrite(GPIO_PIN_RFamp_APC2, 105);
+        break;
+    case PWR_1000mW:
+        dacWrite(GPIO_PIN_RFamp_APC2, 150);
+        break;
+    case PWR_2000mW:
+        dacWrite(GPIO_PIN_RFamp_APC2, 225);
+        break;
+    case PWR_50mW:
+    default:
+        dacWrite(GPIO_PIN_RFamp_APC2, 20);
+        Power = PWR_50mW;
+        break;
+    }
 #elif defined(TARGET_TX_BETAFPV_900_V1)
     switch (Power)
     {
@@ -431,6 +463,33 @@ PowerLevels_e POWERMGNT::setPower(PowerLevels_e Power)
         Radio.SetOutputPower(-13);
         break;
     }
+#elif defined(TARGET_TX_EMAX_2400_V1)
+    switch (Power)
+    {
+    case PWR_10mW:
+        Radio.SetOutputPower(-18);
+        break;
+    case PWR_25mW:
+        Radio.SetOutputPower(-14);
+        break;
+    case PWR_100mW:
+        Radio.SetOutputPower(-8);
+        break;
+    case PWR_250mW:
+        Radio.SetOutputPower(-4);
+        break;
+    case PWR_500mW:
+        Radio.SetOutputPower(-1);
+        break;
+    case PWR_1000mW:
+        Radio.SetOutputPower(3);
+        break;
+    case PWR_50mW:    
+    default:
+        Power = PWR_50mW;
+        Radio.SetOutputPower(-11);
+        break;
+    }
 #elif defined(TARGET_RX)
 #ifdef TARGET_SX1280
     Radio.SetOutputPower(13); //default is max power (12.5dBm for SX1280 RX)
@@ -447,7 +506,7 @@ PowerLevels_e POWERMGNT::setPower(PowerLevels_e Power)
 
 void POWERMGNT::powerLedUpdate()
 {
-#if defined(TARGET_TX_BETAFPV_2400_V1) || defined(TARGET_TX_BETAFPV_900_V1)
+#if defined(TARGET_TX_BETAFPV_2400_V1) || defined(TARGET_TX_BETAFPV_900_V1) || defined(TARGET_TX_EMAX_2400_V1)
     switch (CurrentPower)
     {
     case PWR_250mW:
@@ -472,7 +531,7 @@ void POWERMGNT::powerLedUpdate()
 
 void POWERMGNT::powerLedInit()
 {
-#if defined(TARGET_TX_BETAFPV_2400_V1) || defined(TARGET_TX_BETAFPV_900_V1)
+#if defined(TARGET_TX_BETAFPV_2400_V1) || defined(TARGET_TX_BETAFPV_900_V1) || defined(TARGET_TX_EMAX_2400_V1)
     pinMode(GPIO_PIN_LED_GREEN, OUTPUT);// "RED" LED
     pinMode(GPIO_PIN_LED_BLUE, OUTPUT);
 #endif
