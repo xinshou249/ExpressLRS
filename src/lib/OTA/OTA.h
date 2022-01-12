@@ -1,46 +1,37 @@
 #ifndef H_OTA
 #define H_OTA
 
+#include <functional>
 #include "CRSF.h"
 
 // expresslrs packet header types
-// 00 -> standard 4 channel data packet
-// 01 -> switch data packet
-// 11 -> tlm packet
-// 10 -> sync packet with hop data
+// 00 -> standard channel data packet
+// 01 -> MSP data packet
+// 11 -> TLM packet
+// 10 -> sync packet
 #define RC_DATA_PACKET 0b00
 #define MSP_DATA_PACKET 0b01
 #define TLM_PACKET 0b11
 #define SYNC_PACKET 0b10
 
-#if defined HYBRID_SWITCHES_8 or defined UNIT_TEST
-#if TARGET_TX or defined UNIT_TEST
-#ifdef ENABLE_TELEMETRY
-void ICACHE_RAM_ATTR GenerateChannelDataHybridSwitch8(volatile uint8_t* Buffer, CRSF *crsf, bool TelemetryStatus);
-#else
-void ICACHE_RAM_ATTR GenerateChannelDataHybridSwitch8(volatile uint8_t* Buffer, CRSF *crsf);
-#endif
-#endif
-#if TARGET_RX or defined UNIT_TEST
-void ICACHE_RAM_ATTR UnpackChannelDataHybridSwitch8(volatile uint8_t* Buffer, CRSF *crsf);
+// Mask used to XOR the ModelId into the SYNC packet for ModelMatch
+#define MODELMATCH_MASK 0x3f
+
+enum OtaSwitchMode_e { sm1Bit, smHybrid, smHybridWide };
+void OtaSetSwitchMode(OtaSwitchMode_e mode);
+extern OtaSwitchMode_e OtaSwitchModeCurrent;
+
+#if defined(TARGET_TX) || defined(UNIT_TEST)
+typedef std::function<void (volatile uint8_t* Buffer, CRSF *crsf, bool TelemetryStatus, uint8_t nonce, uint8_t tlmDenom)> PackChannelData_t;
+extern PackChannelData_t PackChannelData;
+#if defined(UNIT_TEST)
+void OtaSetHybrid8NextSwitchIndex(uint8_t idx);
 #endif
 #endif
 
-#if !defined HYBRID_SWITCHES_8 or defined UNIT_TEST
-#if TARGET_TX or defined UNIT_TEST
-void ICACHE_RAM_ATTR GenerateChannelData10bit(volatile uint8_t* Buffer, CRSF *crsf);
-#endif
-#if TARGET_RX or defined UNIT_TEST
-void ICACHE_RAM_ATTR UnpackChannelData10bit(volatile uint8_t* Buffer, CRSF *crsf);
-#endif
-#endif
-
-#if defined HYBRID_SWITCHES_8
-#define GenerateChannelData GenerateChannelDataHybridSwitch8
-#define UnpackChannelData UnpackChannelDataHybridSwitch8
-#else
-#define GenerateChannelData GenerateChannelData10bit
-#define UnpackChannelData UnpackChannelData10bit
+#if defined(TARGET_RX) || defined(UNIT_TEST)
+typedef std::function<bool (volatile uint8_t* Buffer, CRSF *crsf, uint8_t nonce, uint8_t tlmDenom)> UnpackChannelData_t;
+extern UnpackChannelData_t UnpackChannelData;
 #endif
 
 #endif // H_OTA

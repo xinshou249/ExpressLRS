@@ -13,6 +13,7 @@
 typedef uint8_t byte;
 
 #define HEX 16
+#define DEC 10
 
 class Stream
 {
@@ -40,6 +41,7 @@ public:
     void flush() {}
     void end() {}
     void begin(int baud) {}
+    void enableHalfDuplexRx() {}
 
     // Print methods
     size_t write(uint8_t c) {return 1;}
@@ -73,8 +75,10 @@ inline void delay(int32_t time) {
 inline unsigned long millis() { return 0; }
 inline void delayMicroseconds(int delay) { }
 
+const char device_name[] = "testing";
+const uint8_t device_name_size = sizeof(device_name);
+
 #ifdef _WIN32
 #define random rand
 #define srandom srand
 #endif
-

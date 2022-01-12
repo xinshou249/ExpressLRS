@@ -9,6 +9,8 @@ using namespace std;
 
 #if CRSF_RX_MODULE
 
+#include "CRSF.h"
+
 Telemetry::Telemetry()
 {
     ResetState();
@@ -28,8 +30,22 @@ bool Telemetry::ShouldCallEnterBind()
     return enterBind;
 }
 
-#ifdef ENABLE_TELEMETRY
-PAYLOAD_DATA(GPS, BATTERY_SENSOR, ATTITUDE, DEVICE_INFO, FLIGHT_MODE, MSP_RESP);
+bool Telemetry::ShouldCallUpdateModelMatch()
+{
+    bool updateModelMatch = callUpdateModelMatch;
+    callUpdateModelMatch = false;
+    return updateModelMatch;
+}
+
+bool Telemetry::ShouldSendDeviceFrame()
+{
+    bool deviceFrame = sendDeviceFrame;
+    sendDeviceFrame = false;
+    return deviceFrame;
+}
+
+
+PAYLOAD_DATA(GPS, BATTERY_SENSOR, ATTITUDE, DEVICE_INFO, FLIGHT_MODE, VARIO);
 
 bool Telemetry::GetNextPayload(uint8_t* nextPayloadSize, uint8_t **payloadData)
 {
@@ -94,7 +110,6 @@ uint8_t Telemetry::ReceivedPackagesCount()
 {
     return receivedPackages;
 }
-#endif
 
 void Telemetry::ResetState()
 {
@@ -103,7 +118,6 @@ void Telemetry::ResetState()
     currentPayloadIndex = 0;
     receivedPackages = 0;
 
-    #ifdef ENABLE_TELEMETRY
     uint8_t offset = 0;
 
     for (int8_t i = 0; i < payloadTypesCount; i++)
@@ -119,7 +133,6 @@ void Telemetry::ResetState()
         }
         #endif
     }
-    #endif
 }
 
 bool Telemetry::RXhandleUARTin(uint8_t data)
@@ -156,12 +169,12 @@ bool Telemetry::RXhandleUARTin(uint8_t data)
             if (CRSFinBuffer[CRSF_TELEMETRY_LENGTH_INDEX] == currentTelemetryByte)
             {
                 // exclude first bytes (sync byte + length), skip last byte (submitted crc)
-                uint8_t crc = CalcCRC(CRSFinBuffer + CRSF_FRAME_NOT_COUNTED_BYTES, CRSFinBuffer[CRSF_TELEMETRY_LENGTH_INDEX] - CRSF_TELEMETRY_CRC_LENGTH);
+                uint8_t crc = crsf_crc.calc(CRSFinBuffer + CRSF_FRAME_NOT_COUNTED_BYTES, CRSFinBuffer[CRSF_TELEMETRY_LENGTH_INDEX] - CRSF_TELEMETRY_CRC_LENGTH);
                 telemetry_state = TELEMETRY_IDLE;
 
                 if (data == crc)
                 {
-                    AppendTelemetryPackage();
+                    AppendTelemetryPackage(CRSFinBuffer);
                     receivedPackages++;
                     return true;
                 }
@@ -181,37 +194,92 @@ bool Telemetry::RXhandleUARTin(uint8_t data)
     return true;
 }
 
-void Telemetry::AppendTelemetryPackage()
+bool Telemetry::AppendTelemetryPackage(uint8_t *package)
 {
-    if (CRSFinBuffer[CRSF_TELEMETRY_TYPE_INDEX] == CRSF_FRAMETYPE_COMMAND && CRSFinBuffer[3] == 'b' && CRSFinBuffer[4] == 'l')
+    const crsf_header_t *header = (crsf_header_t *) package;
+
+    if (header->type == CRSF_FRAMETYPE_COMMAND && package[3] == 'b' && package[4] == 'l')
     {
         callBootloader = true;
-        return;
+        return true;
     }
-    if (CRSFinBuffer[CRSF_TELEMETRY_TYPE_INDEX] == CRSF_FRAMETYPE_COMMAND && CRSFinBuffer[3] == 'b' && CRSFinBuffer[4] == 'd')
+    if (header->type == CRSF_FRAMETYPE_COMMAND && package[3] == 'b' && package[4] == 'd')
     {
         callEnterBind = true;
-        return;
+        return true;
     }
-    #ifdef ENABLE_TELEMETRY
-    for (int8_t i = 0; i < payloadTypesCount; i++)
+    if (header->type == CRSF_FRAMETYPE_COMMAND && package[3] == 'm' && package[4] == 'm')
     {
-        if (CRSFinBuffer[CRSF_TELEMETRY_TYPE_INDEX] == payloadTypes[i].type && !payloadTypes[i].locked)
+        callUpdateModelMatch = true;
+        modelMatchId = package[5];
+        return true;
+    }
+    if (header->type == CRSF_FRAMETYPE_DEVICE_PING && package[CRSF_TELEMETRY_TYPE_INDEX + 1] == CRSF_ADDRESS_CRSF_RECEIVER)
+    {
+        sendDeviceFrame = true;
+        return true;
+    }
+
+    uint8_t targetIndex = 0;
+    bool targetFound = false;
+
+
+    if (header->type >= CRSF_FRAMETYPE_DEVICE_PING)
+    {
+        const crsf_ext_header_t *extHeader = (crsf_ext_header_t *) package;
+
+        if (header->type == CRSF_FRAMETYPE_ARDUPILOT_RESP)
         {
-            if (CRSF_FRAME_SIZE(CRSFinBuffer[CRSF_TELEMETRY_LENGTH_INDEX]) <= payloadTypes[i].size)
+            // reserve last slot for adrupilot custom frame with the sub type status text: this is needed to make sure the important status messages are not lost
+            if (package[CRSF_TELEMETRY_TYPE_INDEX + 1] == CRSF_AP_CUSTOM_TELEM_STATUS_TEXT)
             {
-                memcpy(payloadTypes[i].data, CRSFinBuffer, CRSF_FRAME_SIZE(CRSFinBuffer[CRSF_TELEMETRY_LENGTH_INDEX]));
-                payloadTypes[i].updated = true;
+                targetIndex = payloadTypesCount - 1;
             }
-            #if defined(UNIT_TEST)
             else
             {
-                cout << "buffer not large enough for type " << (int)payloadTypes[i].type  << " with size " << (int)payloadTypes[i].size << " would need " << CRSF_FRAME_SIZE(CRSFinBuffer[CRSF_TELEMETRY_LENGTH_INDEX]) << '\n';
+                targetIndex = payloadTypesCount - 2;
             }
-            #endif
-            return;
+            targetFound = true;
+        }
+        else if (extHeader->orig_addr == CRSF_ADDRESS_FLIGHT_CONTROLLER)
+        {
+            targetIndex = payloadTypesCount - 2;
+            targetFound = true;
+        }
+        else
+        {
+            targetIndex = payloadTypesCount - 1;
+            targetFound = true;
         }
     }
-    #endif
+    else
+    {
+        for (int8_t i = 0; i < payloadTypesCount - 2; i++)
+        {
+            if (header->type == payloadTypes[i].type)
+            {
+                if (!payloadTypes[i].locked && CRSF_FRAME_SIZE(package[CRSF_TELEMETRY_LENGTH_INDEX]) <= payloadTypes[i].size)
+                {
+                    targetIndex = i;
+                    targetFound = true;
+                }
+                #if defined(UNIT_TEST)
+                else if (CRSF_FRAME_SIZE(package[CRSF_TELEMETRY_LENGTH_INDEX]) > payloadTypes[i].size)
+                {
+                    cout << "buffer not large enough for type " << (int)payloadTypes[i].type  << " with size " << (int)payloadTypes[i].size << " would need " << CRSF_FRAME_SIZE(package[CRSF_TELEMETRY_LENGTH_INDEX]) << '\n';
+                }
+                #endif
+                break;
+            }
+        }
+    }
+
+    if (targetFound)
+    {
+        memcpy(payloadTypes[targetIndex].data, package, CRSF_FRAME_SIZE(package[CRSF_TELEMETRY_LENGTH_INDEX]));
+        payloadTypes[targetIndex].updated = true;
+    }
+
+    return targetFound;
 }
 #endif

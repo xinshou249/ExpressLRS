@@ -28,93 +28,82 @@
  * Modified/Ammended by Alessandro Carcione 2020
  */
 #include "FIFO.h"
-
-#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+#include "logging.h"
 
 FIFO::FIFO()
 {
     head = 0;
     tail = 0;
     numElements = 0;
-
-    // If the following line fails to compile, FIFO_SIZE is larger than
-    // numElements can hold
-    BUILD_BUG_ON(FIFO_SIZE >= (1 << (sizeof(numElements) * 8)));
 }
 
 FIFO::~FIFO()
 {
 }
 
-void ICACHE_RAM_ATTR FIFO::push(uint8_t data)
+void ICACHE_RAM_ATTR FIFO::push(const uint8_t data)
 {
     if (numElements == FIFO_SIZE)
     {
-        Serial.println("CRITICAL ERROR: Buffer full, will flush");
-        this->flush();
-        //this->popBytes(nullptr, numElements);
+        ERRLN("Buffer full, will flush");
+        flush();
         return;
     }
     else
     {
-        //Increment size
         numElements++;
-
-        //Only move the tail if there is more than one element
-        if (numElements > 1)
-        {
-            //Increment tail location
-            tail++;
-
-            //Make sure tail is within the bounds of the array
-            tail %= FIFO_SIZE;
-        }
-
-        //Store data into array
         buffer[tail] = data;
+        tail = (tail + 1) % FIFO_SIZE;
     }
 }
 
-void ICACHE_RAM_ATTR FIFO::pushBytes(uint8_t *data, int len)
+void ICACHE_RAM_ATTR FIFO::pushBytes(const uint8_t *data, int len)
 {
+    if (numElements + len > FIFO_SIZE)
+    {
+        ERRLN("Buffer full, will flush");
+        flush();
+        return;
+    }
     for (int i = 0; i < len; i++)
     {
-        FIFO::push(data[i]);
+        buffer[tail] = data[i];
+        tail = (tail + 1) % FIFO_SIZE;
     }
+    numElements += len;
 }
 
 uint8_t ICACHE_RAM_ATTR FIFO::pop()
 {
     if (numElements == 0)
     {
-        //    Serial.println(F("Buffer empty"));
+        // DBGLN(F("Buffer empty"));
         return 0;
     }
     else
     {
-        //Decrement size
         numElements--;
-
         uint8_t data = buffer[head];
-
-        if (numElements >= 1)
-        {
-            //Move head up one position
-            head++;
-
-            //Make sure head is within the bounds of the array
-            head %= FIFO_SIZE;
-        }
-
+        head = (head + 1) % FIFO_SIZE;
         return data;
     }
 }
 
 void ICACHE_RAM_ATTR FIFO::popBytes(uint8_t *data, int len)
 {
-    for (int i = 0; i < len; i++)
+    if (numElements < len)
     {
-        data[i] = FIFO::pop();
+        // DBGLN(F("Buffer underrun"));
+        flush();
+    }
+    else
+    {
+        numElements -= len;
+        for (int i = 0; i < len; i++)
+        {
+            data[i] = buffer[head];
+            head = (head + 1) % FIFO_SIZE;
+        }
     }
 }
 
@@ -122,7 +111,7 @@ uint8_t ICACHE_RAM_ATTR FIFO::peek()
 {
     if (numElements == 0)
     {
-        //    Serial.println(F("Buffer empty"));
+        // DBGLN(F("Buffer empty"));
         return 0;
     }
     else
@@ -132,19 +121,14 @@ uint8_t ICACHE_RAM_ATTR FIFO::peek()
     }
 }
 
-int ICACHE_RAM_ATTR FIFO::size()
+uint16_t ICACHE_RAM_ATTR FIFO::size()
 {
     return numElements;
 }
 
 void ICACHE_RAM_ATTR FIFO::flush()
 {
-    if (numElements > 0)
-    {
-        memset(buffer, 0x00, FIFO_SIZE);
-        head = 0;
-        tail = 0;
-        numElements = 0;
-        Serial.println("FIFO full err - it was flushed");
-    }
+    head = 0;
+    tail = 0;
+    numElements = 0;
 }

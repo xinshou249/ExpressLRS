@@ -23,8 +23,8 @@ public:
     static void (*RXtimeout)(); //function pointer for callback
 
 ///////////Radio Variables////////
-    #define TXRXBuffSize 8
-    const uint8_t TXbuffLen = TXRXBuffSize; //TODO might not always be const
+    #define TXRXBuffSize 16
+    const uint8_t TXbuffLen = TXRXBuffSize;
     const uint8_t RXbuffLen = TXRXBuffSize;
 
     static volatile WORD_ALIGNED_ATTR uint8_t TXdataBuffer[TXRXBuffSize];
@@ -34,6 +34,7 @@ public:
     bool crcEnabled = false;
 
     //// Parameters ////
+    uint8_t PayloadLength = 8; // Dummy default value which is overwritten during setup.
     uint32_t currFreq = 0; // leave as 0 to ensure that it gets set
     uint8_t currSyncWord = SX127X_SYNC_WORD;
     uint8_t currPreambleLen = 0;
@@ -61,14 +62,16 @@ public:
     bool Begin();
     void End();
     bool DetectChip();
-    void Config(SX127x_Bandwidth bw, SX127x_SpreadingFactor sf, SX127x_CodingRate cr, uint32_t freq, uint8_t preambleLen, uint8_t syncWord, bool InvertIQ);
-    void Config(SX127x_Bandwidth bw, SX127x_SpreadingFactor sf, SX127x_CodingRate cr, uint32_t freq, uint8_t preambleLen, bool InvertIQ);
+    void Config(SX127x_Bandwidth bw, SX127x_SpreadingFactor sf, SX127x_CodingRate cr, uint32_t freq, uint8_t preambleLen, uint8_t syncWord, bool InvertIQ, uint8_t PayloadLength);
+    void Config(SX127x_Bandwidth bw, SX127x_SpreadingFactor sf, SX127x_CodingRate cr, uint32_t freq, uint8_t preambleLen, bool InvertIQ, uint8_t PayloadLength);
     void SetMode(SX127x_RadioOPmodes mode);
+    void SetTxIdleMode() { SetMode(SX127x_OPMODE_STANDBY); } // set Idle mode used when switching from RX to TX
     void ConfigLoraDefaults();
 
     void SetBandwidthCodingRate(SX127x_Bandwidth bw, SX127x_CodingRate cr);
     void SetSyncWord(uint8_t syncWord);
     void SetOutputPower(uint8_t Power);
+    void SetOutputPowerMax() { SetOutputPower(0b1111); };
     void SetPreambleLength(uint8_t PreambleLen);
     void SetSpreadingFactor(SX127x_SpreadingFactor sf);
 
@@ -85,7 +88,8 @@ public:
     ////////////////////////////////////////////////////
 
     /////////////////Utility Funcitons//////////////////
-    void ClearIRQFlags();
+    uint8_t GetIrqFlags();
+    void ClearIrqFlags();
 
     //////////////RX related Functions/////////////////
 
@@ -97,11 +101,12 @@ public:
     int8_t GetCurrRSSI();
 
     ////////////Non-blocking TX related Functions/////////////////
-    static void TXnb(uint8_t volatile *data, uint8_t length);
-    static void TXnbISR(); //ISR for non-blocking TX routine
+    void TXnb();
     /////////////Non-blocking RX related Functions///////////////
-    static void RXnb();
-    static void RXnbISR(); //ISR for non-blocking RC routin
+    void RXnb();
 
 private:
+    static void ICACHE_RAM_ATTR IsrCallback();
+    void RXnbISR(); // ISR for non-blocking RX routine
+    void TXnbISR(); // ISR for non-blocking TX routine
 };
