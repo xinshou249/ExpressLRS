@@ -33,7 +33,7 @@
 
 // Output Power
 #define MinPower PWR_10mW
-#define MaxPower PWR_500mW
-#define POWER_OUTPUT_VALUES {-18,-15,-13,-9,-4,3}
+#define MaxPower PWR_1000mW
+#define POWER_OUTPUT_VALUES {-19,-15,-12,-9,-4,-1,3}
 
 #define Regulatory_Domain_ISM_2400 1

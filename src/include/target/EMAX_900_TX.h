@@ -17,7 +17,7 @@
 #define GPIO_PIN_TX_ENABLE      12
 #define GPIO_PIN_RCSIGNAL_RX    2
 #define GPIO_PIN_RCSIGNAL_TX    2 // so we don't have to solder the extra resistor, we switch rx/tx using gpio mux
-#define GPIO_PIN_LED            27
+#define GPIO_PIN_LED_WS2812     27
 #define GPIO_PIN_FAN_EN         17
 #define GPIO_PIN_RFamp_APC2     25
 #define GPIO_PIN_OLED_SDA       4
@@ -30,6 +30,10 @@
 #define GPIO_PIN_KEY_ENTER      35
 
 // Output Power
-#define MinPower                PWR_100mW
-#define MaxPower                PWR_500mW
-#define POWER_OUTPUT_VALUES     {0,3,8}
+#define MinPower                PWR_10mW
+#define HighPower               PWR_250mW
+#define MaxPower                PWR_2000mW
+#define POWER_OUTPUT_DACWRITE
+#define POWER_OUTPUT_VALUES     {0,5,15,25,45,105,150,225}
+
+#define WS2812_IS_GRB
