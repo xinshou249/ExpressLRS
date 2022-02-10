@@ -5,6 +5,10 @@
 // There is some special handling for this target
 #define TARGET_TX_EMAX_2400_V1
 
+#define USE_OLED_I2C
+#define OLED_REVERSED
+#define HAS_FIVE_WAY_BUTTON
+
 // GPIO pin definitions
 #define GPIO_PIN_NSS            5
 #define GPIO_PIN_BUSY           21
@@ -18,22 +22,18 @@
 #define GPIO_PIN_TX_ENABLE      26
 #define GPIO_PIN_RCSIGNAL_RX    13
 #define GPIO_PIN_RCSIGNAL_TX    13
-#define GPIO_PIN_LED_BLUE       17
-#define GPIO_PIN_LED_GREEN      16
-//#define GPIO_PIN_BUTTON         25
 #define GPIO_PIN_FAN_EN         22
-#define GPIO_PIN_OLED_SDA       12
-#define GPIO_PIN_OLED_SCK       15
+#define GPIO_PIN_OLED_SDA       17
+#define GPIO_PIN_OLED_SCK       16
 #define GPIO_PIN_OLED_RST       U8X8_PIN_NONE
-#define GPIO_PIN_KEY_UP         33
-#define GPIO_PIN_KEY_DOWN       32
-#define GPIO_PIN_KEY_LEFT       34
-#define GPIO_PIN_KEY_RIGHT      25
-#define GPIO_PIN_KEY_ENTER      35
+#define GPIO_PIN_JOYSTICK         33
 
 // Output Power
 #define MinPower PWR_10mW
 #define MaxPower PWR_1000mW
 #define POWER_OUTPUT_VALUES {-19,-15,-12,-9,-4,-1,3}
+
+/* Joystick values              {UP, DOWN, LEFT, RIGHT, ENTER, IDLE}*/
+#define JOY_ADC_VALUES          {2047, 1309, 738, 2730, 0, 4095}
 
 #define Regulatory_Domain_ISM_2400 1
