@@ -31,7 +31,7 @@ SX1280Hal::SX1280Hal()
 
 void SX1280Hal::end()
 {
-    RXenable(); // make sure the TX amp pin is disabled
+    TXRXdisable(); // make sure the RX/TX amp pins are disabled
     detachInterrupt(GPIO_PIN_DIO1);
     SPI.end();
     IsrCallback = nullptr; // remove callbacks
@@ -44,12 +44,11 @@ void SX1280Hal::init()
     pinMode(GPIO_PIN_BUSY, INPUT);
 #endif
     pinMode(GPIO_PIN_DIO1, INPUT);
-    pinMode(GPIO_PIN_RST, OUTPUT);
     pinMode(GPIO_PIN_NSS, OUTPUT);
     digitalWrite(GPIO_PIN_NSS, HIGH);
 
 #if defined(GPIO_PIN_PA_ENABLE) && (GPIO_PIN_PA_ENABLE != UNDEF_PIN)
-    DBGLN("Use PA ctrl pin: %d", GPIO_PIN_PA_ENABLE);
+    DBGLN("Use PA enable pin: %d", GPIO_PIN_PA_ENABLE);
     pinMode(GPIO_PIN_PA_ENABLE, OUTPUT);
     digitalWrite(GPIO_PIN_PA_ENABLE, LOW);
 #endif
@@ -86,17 +85,13 @@ void SX1280Hal::init()
     SPI.begin(GPIO_PIN_SCK, GPIO_PIN_MISO, GPIO_PIN_MOSI, -1); // sck, miso, mosi, ss (ss can be any GPIO)
     gpio_pullup_en((gpio_num_t)GPIO_PIN_MISO);
     SPI.setFrequency(10000000);
-#endif
-
-#ifdef PLATFORM_ESP8266
+#elif defined(PLATFORM_ESP8266)
     DBGLN("PLATFORM_ESP8266");
     SPI.begin();
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
     SPI.setFrequency(10000000);
-#endif
-
-#ifdef PLATFORM_STM32
+#elif defined(PLATFORM_STM32)
     DBGLN("Config SPI");
     SPI.setMOSI(GPIO_PIN_MOSI);
     SPI.setMISO(GPIO_PIN_MISO);
@@ -114,10 +109,15 @@ void SX1280Hal::init()
 void SX1280Hal::reset(void)
 {
     DBGLN("SX1280 Reset");
+
+#if defined(GPIO_PIN_RST) && (GPIO_PIN_RST != UNDEF_PIN)
+    pinMode(GPIO_PIN_RST, OUTPUT);
+
     delay(50);
     digitalWrite(GPIO_PIN_RST, LOW);
     delay(50);
     digitalWrite(GPIO_PIN_RST, HIGH);
+#endif
 
 #if defined(GPIO_PIN_BUSY) && (GPIO_PIN_BUSY != UNDEF_PIN)
     while (digitalRead(GPIO_PIN_BUSY) == HIGH) // wait for busy

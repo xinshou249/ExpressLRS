@@ -580,6 +580,18 @@ local function parseElrsInfoMessage(data)
   goodBadPkt = string.format("%u/%u   %s", badPkt, goodPkt, state)
 end
 
+local function parseElrsV1Message(data)
+  if (data[1] ~= 0xEA) or (data[2] ~= 0xEE) then
+    return
+  end
+
+  -- local badPkt = data[9]
+  -- local goodPkt = (data[10]*256) + data[11]
+  -- goodBadPkt = string.format("%u/%u   X", badPkt, goodPkt)
+  fieldPopup = {id = 0, status = 2, timeout = 0xFF, info = "ERROR: 1.x firmware"}
+  fieldTimeout = getTime() + 0xFFFF
+end
+
 local function refreshNext()
   local command, data = crossfireTelemetryPop()
   if command == 0x29 then
@@ -589,6 +601,8 @@ local function refreshNext()
     if allParamsLoaded < 1 or statusComplete == 0 then
       fieldTimeout = 0 -- go fast until we have complete status record
     end
+  elseif command == 0x2D then
+    parseElrsV1Message(data)
   elseif command == 0x2E then
     parseElrsInfoMessage(data)
   end
@@ -846,7 +860,7 @@ local function setLCDvar()
   lcd_title_color = nil
   lcd_title_bw = nil
   -- Determine if popupConfirmation takes 3 arguments or 2
-  --if pcall(popupConfirmation, "", "", EVT_VIRTUAL_EXIT) then
+  -- if pcall(popupConfirmation, "", "", EVT_VIRTUAL_EXIT) then
   -- major 1 is assumed to be FreedomTX
   local ver, radio, major = getVersion()
   if major ~= 1 then

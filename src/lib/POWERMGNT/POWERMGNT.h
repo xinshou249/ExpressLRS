@@ -2,11 +2,11 @@
 
 #include "targets.h"
 #include "DAC.h"
+#include "device.h"
 
-#if defined(Regulatory_Domain_AU_915) || defined(Regulatory_Domain_EU_868) || defined(Regulatory_Domain_IN_866) || defined(Regulatory_Domain_FCC_915) || defined(Regulatory_Domain_AU_433) || defined(Regulatory_Domain_EU_433)
-#include "SX127xDriver.h"
-#elif Regulatory_Domain_ISM_2400
-#include "SX1280Driver.h"
+#if defined(PLATFORM_ESP32)
+#include <nvs_flash.h>
+#include <nvs.h>
 #endif
 
 #if defined(TARGET_RX)
@@ -18,6 +18,20 @@
 #if defined(HighPower) && !defined(UNLOCK_HIGHER_POWER)
     #undef MaxPower
     #define MaxPower HighPower
+#endif
+
+#if !defined(DefaultPower)
+    #define DefaultPower PWR_50mW
+#endif
+
+#if defined(Regulatory_Domain_EU_CE_2400)
+    #undef MaxPower
+    #define MaxPower PWR_100mW
+
+    #if defined(HighPower)
+        #undef HighPower
+        #define HighPower MaxPower
+    #endif
 #endif
 
 typedef enum
@@ -38,17 +52,31 @@ class POWERMGNT
 
 private:
     static PowerLevels_e CurrentPower;
+    static int8_t CurrentSX1280Power;
     static PowerLevels_e FanEnableThreshold;
     static void updateFan();
+#if defined(PLATFORM_ESP32)
+    static nvs_handle  handle;
+#endif
+    static void LoadCalibration();
 
 public:
     static void setPower(PowerLevels_e Power);
     static PowerLevels_e incPower();
     static PowerLevels_e decPower();
-    static PowerLevels_e currPower();
+    static PowerLevels_e currPower() { return CurrentPower; }
+    static void incSX1280Ouput();
+    static void decSX1280Ouput();
+    static int8_t currentSX1280Ouput();
     static uint8_t powerToCrsfPower(PowerLevels_e Power);
     static PowerLevels_e getDefaultPower();
+    static uint8_t getPowerIndBm();
     static void setDefaultPower();
-    static void setFanEnableTheshold(PowerLevels_e Power);
     static void init();
+    static void SetPowerCaliValues(int8_t *values, size_t size);
+    static void GetPowerCaliValues(int8_t *values, size_t size);
 };
+
+
+#define CALIBRATION_MAGIC    0x43414C << 8   //['C', 'A', 'L']
+#define CALIBRATION_VERSION   1

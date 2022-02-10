@@ -3,17 +3,10 @@
 
 SX127xHal hal;
 
-void inline SX127xDriver::nullCallback(void) {}
+void ICACHE_RAM_ATTR nullCallback(void) {}
+
 SX127xDriver *SX127xDriver::instance = NULL;
 
-void (*SX127xDriver::RXdoneCallback)() = &nullCallback;
-void (*SX127xDriver::TXdoneCallback)() = &nullCallback;
-
-void (*SX127xDriver::TXtimeout)() = &nullCallback;
-void (*SX127xDriver::RXtimeout)() = &nullCallback;
-
-volatile WORD_ALIGNED_ATTR uint8_t SX127xDriver::TXdataBuffer[TXRXBuffSize] = {0};
-volatile WORD_ALIGNED_ATTR uint8_t SX127xDriver::RXdataBuffer[TXRXBuffSize] = {0};
 
 const uint8_t SX127x_AllowedSyncwords[105] =
     {0, 5, 6, 7, 11, 12, 13, 15, 18,
@@ -35,6 +28,10 @@ const uint8_t SX127x_AllowedSyncwords[105] =
 SX127xDriver::SX127xDriver()
 {
   instance = this;
+  TXdoneCallback = &nullCallback; // remove callbacks
+  RXdoneCallback = &nullCallback;
+  PayloadLength = 8; // Dummy default value which is overwritten during setup.
+  currFreq = 0; // leave as 0 to ensure that it gets set
 }
 
 bool SX127xDriver::Begin()
@@ -157,7 +154,7 @@ void SX127xDriver::SetSyncWord(uint8_t syncWord)
 void SX127xDriver::SetOutputPower(uint8_t Power)
 {
   SetMode(SX127x_OPMODE_STANDBY);
-  #ifdef TARGET_TX_BETAFPV_900_V1
+  #if defined(USE_SX1276_RFO_HF)
     hal.writeRegister(SX127X_REG_PA_CONFIG, SX127X_PA_SELECT_RFO | SX127X_MAX_OUTPUT_POWER | Power);
   #else
     hal.writeRegister(SX127X_REG_PA_CONFIG, SX127X_PA_SELECT_BOOST | SX127X_MAX_OUTPUT_POWER | Power);
@@ -223,6 +220,44 @@ void ICACHE_RAM_ATTR SX127xDriver::SetFrequencyReg(uint32_t freq)
   hal.writeRegisterBurst(SX127X_REG_FRF_MSB, outbuff, sizeof(outbuff));
 }
 
+void ICACHE_RAM_ATTR SX127xDriver::SetRxTimeoutUs(uint32_t interval)
+{
+  timeoutSymbols = 0; // no timeout i.e. use continuous mode
+  if (interval)
+  {
+    unsigned int spread = 0;
+    switch (currSF)
+    {
+    case SX127x_SF_6:
+      spread = 6;
+      break;
+    case SX127x_SF_7:
+      spread = 7;
+      break;
+    case SX127x_SF_8:
+      spread = 8;
+      break;
+    case SX127x_SF_9:
+      spread = 9;
+      break;
+    case SX127x_SF_10:
+      spread = 10;
+      break;
+    case SX127x_SF_11:
+      spread = 11;
+      break;
+    case SX127x_SF_12:
+      spread = 12;
+      break;
+    }
+    uint32_t symbolTimeUs = ((uint32_t)(1 << spread)) * 1000000 / GetCurrBandwidth();
+    timeoutSymbols = interval / symbolTimeUs;
+    hal.setRegValue(SX127X_REG_MODEM_CONFIG_2, timeoutSymbols >> 8, 1, 0);  // set the timeout MSB
+    hal.setRegValue(SX127X_REG_SYMB_TIMEOUT_LSB, timeoutSymbols & 0xFF);
+    DBGLN("SetRxTimeout(%u), symbolTime=%uus symbols=%u", interval, (uint32_t)symbolTimeUs, timeoutSymbols)
+  }
+}
+
 bool SX127xDriver::DetectChip()
 {
   uint8_t i = 0;
@@ -273,11 +308,8 @@ void ICACHE_RAM_ATTR SX127xDriver::TXnb()
   //   return; // we were already TXing so abort. this should never happen!!!
   // }
   SetMode(SX127x_OPMODE_STANDBY);
+
   hal.TXenable();
-
-  //TXstartMicros = micros();
-  //HeadRoom = TXstartMicros - TXdoneMicros;
-
   hal.writeRegister(SX127X_REG_FIFO_ADDR_PTR, SX127X_FIFO_TX_BASE_ADDR_MAX);
   hal.writeRegisterFIFO(TXdataBuffer, PayloadLength);
 
@@ -289,8 +321,18 @@ void ICACHE_RAM_ATTR SX127xDriver::TXnb()
 void ICACHE_RAM_ATTR SX127xDriver::RXnbISR()
 {
   hal.readRegisterFIFO(RXdataBuffer, PayloadLength);
+  if (timeoutSymbols)
+  {
+    // From page 42 of the datasheet rev 7
+    // In Rx Single mode, the device will return to Standby mode as soon as the interrupt occurs
+    currOpmode = SX127x_OPMODE_STANDBY;
+  }
   LastPacketRSSI = GetLastPacketRSSI();
   LastPacketSNR = GetLastPacketSNR();
+  // https://www.mouser.com/datasheet/2/761/sx1276-1278113.pdf
+  // page 87 (note we already do /4 in GetLastPacketSNR())
+  int8_t negOffset = (LastPacketSNR < 0) ? LastPacketSNR : 0;
+  LastPacketRSSI += negOffset;
   RXdoneCallback();
 }
 
@@ -304,7 +346,14 @@ void ICACHE_RAM_ATTR SX127xDriver::RXnb()
   SetMode(SX127x_OPMODE_STANDBY);
   hal.RXenable();
   hal.writeRegister(SX127X_REG_FIFO_ADDR_PTR, SX127X_FIFO_RX_BASE_ADDR_MAX);
-  SetMode(SX127x_OPMODE_RXCONTINUOUS);
+  if (timeoutSymbols)
+  {
+    SetMode(SX127x_OPMODE_RXSINGLE);
+  }
+  else
+  {
+    SetMode(SX127x_OPMODE_RXCONTINUOUS);
+  }
 }
 
 void ICACHE_RAM_ATTR SX127xDriver::SetMode(SX127x_RadioOPmodes mode)
@@ -316,21 +365,22 @@ void ICACHE_RAM_ATTR SX127xDriver::SetMode(SX127x_RadioOPmodes mode)
   }
 }
 
-void SX127xDriver::Config(SX127x_Bandwidth bw, SX127x_SpreadingFactor sf, SX127x_CodingRate cr, uint32_t freq, uint8_t preambleLen, bool InvertIQ, uint8_t PayloadLength)
+void SX127xDriver::Config(uint8_t bw, uint8_t sf, uint8_t cr, uint32_t freq, uint8_t preambleLen, bool InvertIQ, uint8_t PayloadLength, uint32_t interval)
 {
-  Config(bw, sf, cr, freq, preambleLen, currSyncWord, InvertIQ, PayloadLength);
+  Config(bw, sf, cr, freq, preambleLen, currSyncWord, InvertIQ, PayloadLength, interval);
 }
 
-void SX127xDriver::Config(SX127x_Bandwidth bw, SX127x_SpreadingFactor sf, SX127x_CodingRate cr, uint32_t freq, uint8_t preambleLen, uint8_t syncWord, bool InvertIQ, uint8_t PayloadLength)
+void SX127xDriver::Config(uint8_t bw, uint8_t sf, uint8_t cr, uint32_t freq, uint8_t preambleLen, uint8_t syncWord, bool InvertIQ, uint8_t PayloadLength, uint32_t interval)
 {
   PayloadLength = PayloadLength;
   IQinverted = InvertIQ;
   ConfigLoraDefaults();
   SetPreambleLength(preambleLen);
   SetOutputPower(currPWR);
-  SetSpreadingFactor(sf);
-  SetBandwidthCodingRate(bw, cr);
+  SetSpreadingFactor((SX127x_SpreadingFactor)sf);
+  SetBandwidthCodingRate((SX127x_Bandwidth)bw, (SX127x_CodingRate)cr);
   SetFrequencyReg(freq);
+  SetRxTimeoutUs(interval);
 }
 
 uint32_t ICACHE_RAM_ATTR SX127xDriver::GetCurrBandwidth()
@@ -514,8 +564,11 @@ void ICACHE_RAM_ATTR SX127xDriver::IsrCallback()
 {
     uint8_t irqStatus = instance->GetIrqFlags();
     instance->ClearIrqFlags();
-    if ((irqStatus & SX127X_CLEAR_IRQ_FLAG_TX_DONE))
+    if ((irqStatus & SX127X_CLEAR_IRQ_FLAG_TX_DONE) && (instance->currOpmode == SX127x_OPMODE_TX))
+    {
+        hal.TXRXdisable();
         instance->TXnbISR();
-    else if ((irqStatus & SX127X_CLEAR_IRQ_FLAG_RX_DONE))
+    }
+    if ((irqStatus & SX127X_CLEAR_IRQ_FLAG_RX_DONE) && ((instance->currOpmode == SX127x_OPMODE_RXSINGLE) || (instance->currOpmode == SX127x_OPMODE_RXCONTINUOUS)))
         instance->RXnbISR();
 }

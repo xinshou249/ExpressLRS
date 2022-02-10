@@ -11,18 +11,7 @@
 #include "OTA.h"
 #include "hwTimer.h"
 
-#if defined(Regulatory_Domain_AU_915) || defined(Regulatory_Domain_EU_868) || defined(Regulatory_Domain_IN_866) || defined(Regulatory_Domain_FCC_915) || defined(Regulatory_Domain_AU_433) || defined(Regulatory_Domain_EU_433)
-#include "SX127xDriver.h"
-extern SX127xDriver Radio;
-#elif defined(Regulatory_Domain_ISM_2400)
-#include "SX1280Driver.h"
-extern SX1280Driver Radio;
-#else
-#error "Radio configuration is not valid!"
-#endif
 
-static const char thisCommit[] = {LATEST_COMMIT, 0};
-static const char thisVersion[] = {LATEST_VERSION, 0};
 static const char emptySpace[1] = {0};
 static char strPowerLevels[] = "10;25;50;100;250;500;1000;2000";
 
@@ -72,6 +61,13 @@ static struct luaItem_selection luaFanThreshold = {
 };
 #endif
 
+#if defined(Regulatory_Domain_EU_CE_2400)
+static struct luaItem_string luaCELimit = {
+    {"100mW CE LIMIT", CRSF_INFO},
+    emptySpace
+};
+#endif
+
 //----------------------------POWER------------------
 
 static struct luaItem_selection luaSwitch = {
@@ -100,8 +96,8 @@ static struct luaItem_string luaInfo = {
 };
 
 static struct luaItem_string luaELRSversion = {
-    {thisVersion, CRSF_INFO},
-    thisCommit
+    {version, CRSF_INFO},
+    commit
 };
 
 //---------------------------- WiFi -----------------------------
@@ -306,8 +302,10 @@ static void registerLuaParameters()
 #if defined(GPIO_PIN_FAN_EN)
   registerLUAParameter(&luaFanThreshold, [](uint8_t id, uint8_t arg){
       config.SetPowerFanThreshold(arg);
-      POWERMGNT::setFanEnableTheshold((PowerLevels_e)arg);
   }, luaPowerFolder.common.id);
+#endif
+#if defined(Regulatory_Domain_EU_CE_2400)
+  registerLUAParameter(&luaCELimit, NULL, luaPowerFolder.common.id);
 #endif
   // VTX folder
   registerLUAParameter(&luaVtxFolder);
@@ -339,12 +337,12 @@ static void registerLuaParameters()
         //confirm run on ELRSv2.lua or start command from CRSF configurator,
         //since ELRS LUA can do 2 step confirmation, it needs confirmation to start wifi to prevent stuck on
         //unintentional button press.
-        sendLuaCommandResponse(&luaWebUpdate, 2, "Wifi Running...");
+        sendLuaCommandResponse(&luaWebUpdate, 2, "WiFi Running...");
         connectionState = wifiUpdate;
       }
       else if (arg > 0 && arg < 4)
       {
-        sendLuaCommandResponse(&luaWebUpdate, 3, "Enter WiFi Update Mode?");
+        sendLuaCommandResponse(&luaWebUpdate, 3, "Enter WiFi Update?");
       }
       else if (arg == 5)
       {
