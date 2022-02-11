@@ -26,7 +26,7 @@
 #define GPIO_PIN_OLED_SDA       17
 #define GPIO_PIN_OLED_SCK       16
 #define GPIO_PIN_OLED_RST       U8X8_PIN_NONE
-#define GPIO_PIN_JOYSTICK       33
+#define GPIO_PIN_JOYSTICK       33  
 
 // Output Power
 #define MinPower PWR_10mW

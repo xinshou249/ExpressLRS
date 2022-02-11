@@ -27,7 +27,7 @@
 #define GPIO_PIN_OLED_SDA       22
 #define GPIO_PIN_OLED_SCK       21
 #define GPIO_PIN_OLED_RST       U8X8_PIN_NONE
-#define GPIO_PIN_JOYSTICK       32
+#define GPIO_PIN_JOYSTICK       33
 
 // Output Power
 #define MinPower                PWR_10mW
@@ -37,6 +37,6 @@
 #define POWER_OUTPUT_VALUES     {0,5,15,25,45,105,150,225}
 
 /* Joystick values              {UP, DOWN, LEFT, RIGHT, ENTER, IDLE}*/
-#define JOY_ADC_VALUES          {1905, 1160, 580, 2580, 0, 4095}
+#define JOY_ADC_VALUES          {1650, 1070, 580, 2170, 0, 3240}
 
 // #define WS2812_IS_GRB
