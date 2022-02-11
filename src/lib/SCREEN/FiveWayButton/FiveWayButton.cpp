@@ -11,7 +11,7 @@
 #if !defined(GPIO_PIN_JOYSTICK)
     #error "JOY_ADC_VALUES requires GPIO_PIN_JOYSTICK defined too"
 #endif
-
+#include "logging.h"
 constexpr uint16_t FiveWayButton::joyAdcValues[] = JOY_ADC_VALUES;
 
 /**
@@ -51,7 +51,7 @@ void FiveWayButton::calcFuzzValues()
 
         // And the fuzz is half the distance to the closest value
         fuzzValues[i] = closestDist / 2;
-        //DBG("joy%u=%u f=%u, ", i, ival, fuzzValues[i]);
+        DBG("joy%u=%u f=%u, ", i, ival, fuzzValues[i]);
     } // for i
 }
 #endif
@@ -60,6 +60,7 @@ int FiveWayButton::readKey()
 {
 #if defined(JOY_ADC_VALUES)
     uint16_t value = analogRead(GPIO_PIN_JOYSTICK);
+    DBG("value =%u", value);
 
     constexpr uint8_t IDX_TO_INPUT[N_JOY_ADC_VALUES - 1] =
         {INPUT_KEY_UP_PRESS, INPUT_KEY_DOWN_PRESS, INPUT_KEY_LEFT_PRESS, INPUT_KEY_RIGHT_PRESS, INPUT_KEY_OK_PRESS};
@@ -103,7 +104,7 @@ void FiveWayButton::update(int *keyValue, bool *keyLongPressed)
         if (newKey != INPUT_KEY_NO_PRESS)
         {
             keyDownStart = now;
-            //DBGLN("down=%u", newKey);
+            DBGLN("down=%u", newKey);
         }
     }
     else
